@@ -1,0 +1,48 @@
+buildscript {
+    def properties = new Properties()
+    properties.load(new FileInputStream("${projectDir}/../dependencies.list"))
+
+    repositories {
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:${properties.get('BUILD_INFO_EXTRACTOR_GRADLE')}"
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:${properties.get('GRADLE_BINTRAY_PLUGIN')}"
+        classpath "io.github.gradle-nexus:publish-plugin:${properties.get("GRADLE_NEXUS_PLUGIN")}"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+group = 'io.realm'
+version = file("${projectDir}/../version.txt").text.trim()
+
+apply from: "${rootDir}/../mavencentral-publications.gradle"
+apply from: "${rootDir}/../mavencentral-publish.gradle"
+
+publishing {
+    publications {
+        realmPublication(MavenPublication) {
+            groupId 'io.realm'
+            artifactId = 'realm-annotations'
+            from components.java
+            populatePom(
+                    it,
+                    'realm-annotations',
+                    'Annotations for Realm. Realm is a mobile database: Build better apps, faster.'
+            )
+        }
+    }
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
